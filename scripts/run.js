@@ -1,14 +1,18 @@
 const main = async () => {
   const gameContractFactory = await hre.ethers.getContractFactory("MyEpicGame");
   const gameContract = await gameContractFactory.deploy(
-    ["yahaha!", "guy", "sticks"],
+    ["Yahaha!", "Guy", "Sticks"],
     [
       "https://i.imgur.com/SLJGBcM.png",
       "https://i.imgur.com/vta4Xm3.png",
       "https://i.imgur.com/xviyD0A.png",
     ],
     [100, 200, 300],
-    [100, 50, 25]
+    [100, 50, 25],
+    "Global Warming",
+    "https://i.imgur.com/8NnFgub.png",
+    1000,
+    50
   );
   await gameContract.deployed();
 
@@ -19,11 +23,15 @@ const main = async () => {
   txn = await gameContract.mintCharacterNFT(2);
   await txn.wait();
 
+  txn = await gameContract.attackBoss();
+  await txn.wait();
+
+  txn = await gameContract.attackBoss();
+  await txn.wait();
   // Get the value of the NFT's URI.
   let returnedTokenUri = await gameContract.tokenURI(1);
   console.log("Token URI:", returnedTokenUri);
 };
-
 const runMain = async () => {
   try {
     await main();

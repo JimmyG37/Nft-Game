@@ -8,7 +8,11 @@ const main = async () => {
       "https://i.imgur.com/xviyD0A.png",
     ],
     [100, 200, 300],
-    [100, 50, 25]
+    [100, 50, 25],
+    "Global Warming",
+    "https://i.imgur.com/8NnFgub.png",
+    1000,
+    50
   );
   await gameContract.deployed();
   console.log("Contract deployed to:", gameContract.address);
