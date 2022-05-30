@@ -1,8 +1,13 @@
 import React, { useEffect, useState } from "react";
+import { ethers } from "ethers";
+import { CONTRACT_ADDRESS, transformCharacterData } from "./constants";
 import "./App.css";
+import SelectCharacter from "./Components/SelectCharacter";
+import MyEpicGame from "./MyEpicGame.json";
 
 function App() {
   const [currentAccount, setCurrentAccount] = useState(null);
+  const [characterNFT, setCharacterNFT] = useState(null);
 
   const checkIfWalletIsConnected = async () => {
     const { ethereum } = window;
@@ -31,6 +36,27 @@ function App() {
     }
   };
 
+  const renderContent = () => {
+    if (!currentAccount) {
+      return (
+        <div className="connect-wallet-container">
+          <img
+            src="https://media0.giphy.com/media/l0HlMURBbyUqF0XQI/giphy.gif?cid=ecf05e47dxkq7f6j793xtge6pr11a1tqwjsbbbbi5uetd5f2&rid=giphy.gif&ct=g"
+            alt="Global Warming Gif"
+          />
+          <button
+            className="cta-button connect-wallet-button"
+            onClick={connectWalletAction}
+          >
+            Connect Wallet To Get Started
+          </button>
+        </div>
+      );
+    } else if (currentAccount && !characterNFT) {
+      return <SelectCharacter setCharacterNFT={setCharacterNFT} />;
+    }
+  };
+
   const connectWalletAction = async () => {
     try {
       const { ethereum } = window;
@@ -52,9 +78,49 @@ function App() {
     }
   };
 
+  const checkNetwork = async () => {
+    try {
+      if (window.ethereum.networkVersion !== "4") {
+        alert("Please connect to Rinkeby");
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   useEffect(() => {
     checkIfWalletIsConnected();
+    checkNetwork();
   }, []);
+
+  useEffect(() => {
+    // The function we will call that interacts with the smart contract
+    const fetchNFTMetadata = async () => {
+      console.log("Checking for Character NFT on address:", currentAccount);
+
+      const provider = new ethers.providers.Web3Provider(window.ethereum);
+      const signer = provider.getSigner();
+      const gameContract = new ethers.Contract(
+        CONTRACT_ADDRESS,
+        MyEpicGame.abi,
+        signer
+      );
+
+      const txn = await gameContract.checkIfUserHasNFT();
+      if (txn.name) {
+        console.log("User has character NFT");
+        setCharacterNFT(transformCharacterData(txn));
+      } else {
+        console.log("No character NFT found");
+      }
+    };
+
+    // We only want to run this if we have an connected wallet
+    if (currentAccount) {
+      console.log("CurrentAccount:", currentAccount);
+      fetchNFTMetadata();
+    }
+  }, [currentAccount]);
 
   return (
     <div className="App">
@@ -64,18 +130,7 @@ function App() {
           <p className="sub-text">
             Team up to protect the Global from Warming!
           </p>
-          <div className="connect-wallet-container">
-            <img
-              src="https://media0.giphy.com/media/l0HlMURBbyUqF0XQI/giphy.gif?cid=ecf05e47dxkq7f6j793xtge6pr11a1tqwjsbbbbi5uetd5f2&rid=giphy.gif&ct=g"
-              alt="Global Warming Gif"
-            />
-            <button
-              className="cta-button connect-wallet-button"
-              onClick={connectWalletAction}
-            >
-              Connect Wallet To Get Started
-            </button>
-          </div>
+          {renderContent()}
         </div>
         <div className="footer-container"></div>
       </div>
