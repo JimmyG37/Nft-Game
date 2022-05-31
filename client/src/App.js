@@ -3,11 +3,14 @@ import { ethers } from "ethers";
 import { CONTRACT_ADDRESS, transformCharacterData } from "./constants";
 import "./App.css";
 import SelectCharacter from "./Components/SelectCharacter";
+import Arena from "./Components/Arena";
 import MyEpicGame from "./MyEpicGame.json";
+import LoadingIndicator from "./Components/LoadingIndicator";
 
 function App() {
   const [currentAccount, setCurrentAccount] = useState(null);
   const [characterNFT, setCharacterNFT] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const checkIfWalletIsConnected = async () => {
     const { ethereum } = window;
@@ -15,6 +18,7 @@ function App() {
     try {
       if (!ethereum) {
         console.log("Make sure you have MetaMask!");
+        setIsLoading(false);
         return;
       } else {
         console.log("We have the ethereum object", ethereum);
@@ -34,9 +38,14 @@ function App() {
     } catch (error) {
       console.log(error);
     }
+    setIsLoading(false);
   };
 
   const renderContent = () => {
+    if (isLoading) {
+      return <LoadingIndicator />;
+    }
+
     if (!currentAccount) {
       return (
         <div className="connect-wallet-container">
@@ -54,6 +63,14 @@ function App() {
       );
     } else if (currentAccount && !characterNFT) {
       return <SelectCharacter setCharacterNFT={setCharacterNFT} />;
+    } else if (currentAccount && characterNFT) {
+      return (
+        <Arena
+          characterNFT={characterNFT}
+          setCharacterNFT={setCharacterNFT}
+          currentAccount={currentAccount}
+        />
+      );
     }
   };
 
@@ -78,19 +95,9 @@ function App() {
     }
   };
 
-  const checkNetwork = async () => {
-    try {
-      if (window.ethereum.networkVersion !== "4") {
-        alert("Please connect to Rinkeby");
-      }
-    } catch (error) {
-      console.log(error);
-    }
-  };
-
   useEffect(() => {
+    setIsLoading(true);
     checkIfWalletIsConnected();
-    checkNetwork();
   }, []);
 
   useEffect(() => {
@@ -113,6 +120,8 @@ function App() {
       } else {
         console.log("No character NFT found");
       }
+
+      setIsLoading(false);
     };
 
     // We only want to run this if we have an connected wallet
